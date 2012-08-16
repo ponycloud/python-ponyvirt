@@ -6,8 +6,8 @@ __all__ = ['Hypervisor']
 
 import libvirt
 import os
-from ponyvirt.domain import Domain
-from ponyvirt.virtxmlbuilder import *
+from domain import Domain
+from virtxmlbuilder import *
 from xml.etree.ElementTree import ElementTree, tostring
 
 def disk_id_generator(offset=0):

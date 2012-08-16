@@ -3,7 +3,7 @@
 __all__ = ['Domain', 'PonyvirtError', 'InvalidOperationError', 'TooManyDisksError', 'NoDomainError']
 
 from xml.etree.ElementTree import XML, tostring
-from ponyvirt.virtxmlbuilder import *
+from virtxmlbuilder import *
 from libvirt import *
 
 class PonyvirtError(Exception):
