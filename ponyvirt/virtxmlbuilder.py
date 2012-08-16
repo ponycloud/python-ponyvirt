@@ -62,6 +62,8 @@ def generate_nic(network):
     builder.end('mac')
     builder.start('source', network['source'])
     builder.end('source')
+    builder.start('model', {'type':'virtio'})
+    builder.end('model')
     builder.end('interface')
     return builder.close()
 
