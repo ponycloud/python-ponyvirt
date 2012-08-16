@@ -120,9 +120,8 @@ class Domain(object):
     def delete(self):
         try:
             self.destroy()
-        except libvirtError, error:
-            if error.get_error_code() != VIR_ERR_OPERATION_INVALID:
-                raise
+        except InvalidOperationError:
+            pass
         self.domain.undefine()
 
     @convert_exception_type
