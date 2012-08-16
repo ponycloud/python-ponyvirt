@@ -1,13 +1,14 @@
+#!/usr/bin/python -tt
+
 import sys
 
 __all__ = ['Hypervisor']
 
 import libvirt
 import os
-from pprint import pprint as pp
 from ponyvirt.domain import Domain
 from ponyvirt.virtxmlbuilder import *
-from xml.etree.ElementTree import ElementTree, Element, XML, tostring, TreeBuilder
+from xml.etree.ElementTree import ElementTree, tostring
 
 def disk_id_generator(offset=0):
     for i in xrange(26):
@@ -136,9 +137,11 @@ if __name__ == '__main__':
             'file': '/var/lib/libvirt/images/FFF.img',
             },
         })
-    print >>sys.stdout, "Dementni Python ceka na detach..."
+    print >>sys.stdout, "Press any key to detach volume..."
     sys.stdin.readline()
     h['Testicek'].detach_disk(h['Testicek'].get_disks()[-1])
 
 
-#    pp(h['Test'].get_disks())
+
+# vim:set sw=4 ts=4 et:
+# -*- coding: utf-8 -*-

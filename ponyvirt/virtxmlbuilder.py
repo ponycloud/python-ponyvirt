@@ -1,5 +1,8 @@
+#!/usr/bin/python -tt
+
 from xml.etree.ElementTree import TreeBuilder
 
+__all__ = ['generate_disk', 'generate_nic']
 
 def sans(d, *items):
     d = d.copy()
@@ -62,3 +65,5 @@ def generate_nic(network):
     builder.end('interface')
     return builder.close()
 
+# vim:set sw=4 ts=4 et:
+# -*- coding: utf-8 -*-

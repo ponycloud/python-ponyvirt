@@ -1,4 +1,7 @@
 #!/usr/bin/python -tt
+from domain import *
+from hypervisor import *
+from virtxmlbuilder import *
 
 pass
 

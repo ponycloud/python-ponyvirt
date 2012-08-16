@@ -1,3 +1,7 @@
+#!/usr/bin/python -tt
+
+__all__ = ['Domain', 'PonyvirtError', 'InvalidOperationError', 'TooManyDisksError', 'NoDomainError']
+
 from xml.etree.ElementTree import XML, tostring
 from ponyvirt.virtxmlbuilder import *
 from libvirt import *
@@ -34,15 +38,6 @@ def convert_exception_type(function):
 
 
 class Domain(object):
-    NOSTATE = VIR_DOMAIN_NOSTATE
-    RUNNING = VIR_DOMAIN_RUNNING
-    BLOCKED = VIR_DOMAIN_BLOCKED
-    PAUSED = VIR_DOMAIN_PAUSED
-    SHUTDOWN = VIR_DOMAIN_SHUTDOWN
-    SHUTOFF = VIR_DOMAIN_SHUTOFF
-    CRASHED = VIR_DOMAIN_CRASHED
-    PMSUSPENDED = VIR_DOMAIN_PMSUSPENDED
-
     def __init__(self, libvirt_domain):
         self.domain = libvirt_domain
         all_names = set(['vd' + chr(x) for x in xrange(ord('a'), ord('z') + 1)])
@@ -74,15 +69,15 @@ class Domain(object):
             return self.info()[0]
         except libvirtError, e:
             if e.get_error_code() == VIR_ERR_NO_DOMAIN:
-                return self.NOSTATE
+                return VIR_DOMAIN_NOSTATE
             else:
                 raise
 
     @property
     @convert_exception_type
     def active(self):
-        return self.state in (self.RUNNING, self.SHUTDOWN,
-                              self.PAUSED, self.BLOCKED)
+        return self.state in (VIR_DOMAIN_RUNNING, VIR_DOMAIN_SHUTDOWN,
+                              VIR_DOMAIN_PAUSED, VIR_DOMAIN_BLOCKED)
 
     @convert_exception_type
     def shutdown(self):
@@ -162,3 +157,6 @@ class Domain(object):
         self.domain.detachDeviceFlags(
             tostring(generate_disk(disk_definition, disk_definition['target'])), VIR_DOMAIN_AFFECT_CURRENT)
         self.drive_names.append(disk_definition['target'])
+
+# vim:set sw=4 ts=4 et:
+# -*- coding: utf-8 -*-
