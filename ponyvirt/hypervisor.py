@@ -6,7 +6,7 @@ __all__ = ['Hypervisor']
 
 import libvirt
 import os
-from domain import Domain
+from domain import Domain, NoDomainError
 from virtxmlbuilder import *
 from xml.etree.ElementTree import ElementTree, tostring
 
@@ -26,8 +26,8 @@ class Hypervisor(object):
 
     def __contains__(self, index):
         try:
-            self.__getitem__(index)
-        except KeyError, e:
+            self[index]
+        except NoDomainError, e:
             return False
         return True
 
@@ -39,7 +39,7 @@ class Hypervisor(object):
                 dom = self.conn.lookupByName(item)
         except libvirt.libvirtError, e:
             if e.get_error_code() == libvirt.VIR_ERR_NO_DOMAIN:
-                raise KeyError()
+                raise NoDomainError()
             else:
                 raise
         return Domain(dom)
@@ -49,7 +49,7 @@ class Hypervisor(object):
         for id in self.conn.listDomainsID():
             try:
                 domainlist.append(self[id].name)
-            except KeyError:
+            except NoDomainError:
                 pass
         return iter(domainlist)
 
