@@ -1,18 +1,23 @@
+import sys
+
+__all__ = ['Hypervisor']
+
 import libvirt
 import os
+from pprint import pprint as pp
 from ponyvirt.domain import Domain
-from xml.etree.ElementTree import ElementTree, Element, XML, tostring
+from ponyvirt.virtxmlbuilder import *
+from xml.etree.ElementTree import ElementTree, Element, XML, tostring, TreeBuilder
 
-
-def disk_id_generator():
+def disk_id_generator(offset=0):
     for i in xrange(26):
-        yield 'vd' + chr(ord('a') + i)
+        yield 'vd' + chr(ord('a') + i + offset)
 
 class Hypervisor(object):
-    def __init__(self, connection_string="qemu:///system"):
-        """
+    def __init__(self, connection_string='qemu:///system'):
+        '''
         Connection string example qemu:///system
-        """
+        '''
         self.conn = libvirt.open(connection_string)
 
     def __len__(self):
@@ -47,58 +52,93 @@ class Hypervisor(object):
                 pass
         return iter(domainlist)
 
+    def __delitem__(self, item):
+        self[item].delete()
+
     def close(self):
         self.conn.close()
 
     def create(self, name, uuid, memory=256, vcpu=1, disks=[], vifs=[]):
-        """
+        '''
         Creates new domain.
 
         Disks are something like:
+
             [
-                ('network', 'raw', 'sheepdog', 'vm:alice:root'),
-                ('network', 'raw', 'sheepdog', 'vm:alice:eph'),
+                {
+                    'type': 'network',
+                    'device': 'disk',
+                    'format': 'raw',
+                    'source': {
+                        'protocol': 'sheepdog',
+                        'name': 'Alice',
+                        'hosts': [('127.0.0.1', '7000'),],
+                    },
+                },
+                {
+                    'type': 'file',
+                    'device': 'disk',
+                    'format': 'qcow2',
+                    'source': {
+                        'file': '/var/lib/libvirt/images/Alice.img',
+                    },
+                },
             ]
 
         Virtual interfaces:
             [
-                ('br100', 'fa:16:3e:73:3b:f8'),
+                {
+                    'type': 'bridge',
+                    'mac': 'fa:16:3e:73:3b:f8',
+                    'source': {'bridge': 'br100'},
+                }
             ]
-        """
+        '''
         tmp_vm = ElementTree(
-            file=os.path.dirname(__file__) + "/templates/vm.xml")
+            file=os.path.dirname(__file__) + '/templates/vm.xml')
 
-        tmp_vm.find("name").text = name
-        tmp_vm.find("uuid").text = uuid
-        tmp_vm.find("memory").text = str(memory)
-        tmp_vm.find("vcpu").text = str(vcpu)
+        tmp_vm.find('name').text = name
+        tmp_vm.find('uuid').text = uuid
+        tmp_vm.find('memory').text = str(memory)
+        tmp_vm.find('vcpu').text = str(vcpu)
 
         diskseq = disk_id_generator()
+
         for disk in disks:
-            tmp_disk = ElementTree(
-                file = os.path.dirname(__file__) + "/templates/disk.xml")
-            tmp_disk.getroot().attrib['type'] = disk[0]
-            tmp_disk.find("driver").attrib['type'] = disk[1]
-            tmp_disk.find("source").attrib['protocol'] = disk[2]
-            tmp_disk.find("source").attrib['name'] = disk[3]
-            tmp_disk.find("target").attrib['dev'] = next(diskseq)
-            tmp_vm.find("devices").append(tmp_disk.getroot())
+            tmp_vm.find('devices').append(generate_disk(disk, next(diskseq)))
+
         for network in vifs:
-            tmp_net = ElementTree(
-                file=os.path.dirname(__file__) + "/templates/network.xml")
-            tmp_net.find("source").attrib["bridge"] = network[0]
-            tmp_net.find("mac").attrib["address"] = network[1]
-            tmp_vm.find("devices").append(tmp_net.getroot())
-        self.conn.createXML(tostring(tmp_vm.getroot()), 0)
+            tmp_vm.find('devices').append(generate_nic(network))
+        self.conn.defineXML(tostring(tmp_vm.getroot()))
 
 
-def __del__(self, item):
-    self[item].delete()
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     h = Hypervisor()
-    h.create("Testicek", "d56f7b2c-e531-405f-8fb1-e37764970231",
-        disks=[('network', 'raw', 'sheepdog', 'vm:alice:root'),
-            ('network', 'raw', 'sheepdog', 'vm:alice:eph')],
-        vifs=[('virbr0', 'fa:16:3e:73:3b:f8')])
+    h.create('Testicek', 'd56f7b2c-e531-405f-8fb1-e37764970231',
+        disks=[{
+            'type': 'file',
+            'device': 'disk',
+            'format': 'raw',
+            'source': {
+                'file': '/var/lib/libvirt/images/Test.img',
+                },
+            }, ],
+        vifs=[{
+            'type': 'bridge',
+            'mac': 'fa:16:3e:73:3b:f8',
+            'source': {'bridge': 'virbr0'},
+            }])
+    d = h['Testicek'].attach_disk({
+        'type': 'file',
+        'device': 'disk',
+        'format': 'raw',
+        'source': {
+            'file': '/var/lib/libvirt/images/FFF.img',
+            },
+        })
+    print >>sys.stdout, "Dementni Python ceka na detach..."
+    sys.stdin.readline()
+    h['Testicek'].detach_disk(h['Testicek'].get_disks()[-1])
+
+
+#    pp(h['Test'].get_disks())
