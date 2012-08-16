@@ -1,7 +1,0 @@
-<disk type='network' device='disk'>
-    <source protocol="sheepdog" name="image_name">
-        <host name="localhost" port="7000"/>
-    </source>
-    <target dev="vda" bus="virtio"/>
-</disk>
-

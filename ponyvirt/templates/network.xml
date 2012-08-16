@@ -1,4 +1,0 @@
-<interface type='bridge'>
-    <mac address=''/>
-    <source bridge=''/>
-</interface>
